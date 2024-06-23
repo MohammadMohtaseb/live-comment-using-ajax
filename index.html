@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ajax Example</title>
+    <style>
+        #show {
+            padding: 15px;
+            font-weight: bold;
+            font-size: 25px;
+        }
+        #txtComment, #show {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h2>Ajax Request with JavaScript</h2>
+    <input type="text" placeholder="JavaScript" id="input" />
+    <button type="button" id="button">Send Comment</button>
+    <br />
+    <div id="show">Get comment:</div>
+    <div id="txtComment"></div>
+    <div id="showTheComments"></div>
+
+    <script>
+        const inputTxt = document.getElementById("input");
+        const addCommentButton = document.getElementById("button");
+        const showRealTimeComment = document.getElementById("txtComment");
+        const commentBox = document.getElementById("showTheComments");
+
+        let comments = JSON.parse(localStorage.getItem("comments")) || [];
+
+        
+        window.onload = () => {
+            comments.forEach(commentObj => addCommentToDOM(commentObj.comment));
+        };
+
+        
+        inputTxt.addEventListener("keyup", () => {
+            showRealTimeComment.textContent = inputTxt.value;
+        });
+
+        
+        addCommentButton.addEventListener("click", () => {
+            const commentTxt = inputTxt.value;
+
+            
+            fetch("https://jsonplaceholder.typicode.com/posts", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ comment: commentTxt })
+            })
+            .then(response => {
+                if (!response.ok) throw Error(`Error: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                console.log("Data sent:", data);
+                comments.push({ comment: commentTxt });
+                saveCommentsToLocalStorage();
+                addCommentToDOM(commentTxt);
+                clearInput();
+            })
+            .catch(err => {
+                console.error("Error:", err);
+            });
+        });
+
+        function saveCommentsToLocalStorage() {
+            localStorage.setItem("comments", JSON.stringify(comments));
+        }
+
+        function addCommentToDOM(commentTxt) {
+            const comment = document.createElement("div");
+            comment.innerText = commentTxt;
+            commentBox.appendChild(comment);
+        }
+
+        function clearInput() {
+            inputTxt.value = "";
+            showRealTimeComment.textContent = "";
+        }
+    </script>
+</body>
+</html>
